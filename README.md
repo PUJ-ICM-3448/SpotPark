@@ -1,2 +1,2 @@
-# proyecto-equipo-1
-Proyecto equipo 1 - Los pro-gramadores
+# SpotPark
+SpotPark - Equipo 1 - Los pro-gramadores
