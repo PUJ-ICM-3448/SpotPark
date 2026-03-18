@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.SpotPark" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/dark_green</item>
+        <item name="colorPrimaryDark">@color/dark_green</item>
+        <item name="colorAccent">@color/soft_green</item>
+        <item name="android:statusBarColor">@color/dark_green</item>
+    </style>
+</resources>

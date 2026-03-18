@@ -1,0 +1,49 @@
+<resources>
+    <string name="app_name">SpotPark</string>
+    <string name="slogan">Encuentra-Reserva-Parquea</string>
+
+    <string name="usuario_correo">Usuario o Correo Electrónico</string>
+    <string name="contrasena">Contraseña</string>
+    <string name="iniciar_sesion">Iniciar Sesión</string>
+    <string name="iniciar_con_voz">Iniciar con voz</string>
+    <string name="no_tienes_cuenta">¿No tienes cuenta?</string>
+    <string name="registrate">Regístrate</string>
+
+    <string name="crea_tu_cuenta">Crea tu cuenta</string>
+    <string name="nombre_completo">Nombre Completo</string>
+    <string name="correo_electronico">Correo Electrónico</string>
+    <string name="numero_telefono">Número de Teléfono</string>
+    <string name="confirmar_contrasena">Confirmar Contraseña</string>
+    <string name="conductor">Conductor</string>
+    <string name="administrador">Administrador</string>
+    <string name="ya_tienes_cuenta">¿Ya tienes cuenta?</string>
+
+    <string name="ubicacion_actual">Ubicación actual: cerca a la Javeriana</string>
+    <string name="obtener_ubicacion">Obtener ubicación</string>
+    <string name="buscar_parqueadero">Buscar parqueadero</string>
+    <string name="buscar_por_voz">Buscar por voz</string>
+    <string name="parqueadero_javeriana">Parqueadero Javeriana</string>
+    <string name="parqueadero_marly">Parqueadero Marly</string>
+    <string name="detalle_javeriana">150 m • 8 espacios disponibles</string>
+
+    <string name="detalle_parqueadero">Detalle del parqueadero</string>
+    <string name="direccion_javeriana">Kra 7 # 40-62, Bogotá</string>
+    <string name="distancia_javeriana">150 m</string>
+    <string name="disponibilidad_texto">8 espacios disponibles</string>
+    <string name="iniciar_ruta">Iniciar ruta</string>
+    <string name="reportar_disponibilidad">Reportar disponibilidad</string>
+    <string name="volver_mapa">Volver al mapa</string>
+
+    <string name="navegacion_titulo">Navegación en curso</string>
+    <string name="destino">Destino: Parqueadero Javeriana</string>
+    <string name="tiempo_estimado">Tiempo estimado: 3 min</string>
+    <string name="distancia_ruta">Distancia: 150 m</string>
+    <string name="finalizar_ruta">Finalizar ruta</string>
+
+    <string name="reporte_titulo">Reporte de disponibilidad</string>
+    <string name="disponible">Disponible</string>
+    <string name="ocupado">Ocupado</string>
+    <string name="tomar_foto">Tomar foto</string>
+    <string name="reporte_voz">Reportar por voz</string>
+    <string name="enviar_reporte">Enviar reporte</string>
+</resources>

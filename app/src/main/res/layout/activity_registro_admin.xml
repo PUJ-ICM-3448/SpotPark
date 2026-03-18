@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:background="@color/dark_green">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center_horizontal"
+        android:padding="24dp">
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="30dp" />
+
+        <Button
+            android:id="@+id/btnVolver"
+            android:layout_width="48dp"
+            android:layout_height="40dp"
+            android:layout_gravity="start"
+            android:background="@drawable/bg_boton"
+            android:text="←"
+            android:textAllCaps="false"
+            android:textColor="@color/white" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="16dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Crea tu cuenta&#10;De Administrador"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:layout_marginBottom="28dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_campo"
+            android:hint="Nombre Del Parqueadero"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <Space android:layout_width="match_parent" android:layout_height="12dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_campo"
+            android:hint="Dirección Del Parqueadero"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <Space android:layout_width="match_parent" android:layout_height="12dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_campo"
+            android:hint="Capacidad Del Parqueadero"
+            android:inputType="number"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <Space android:layout_width="match_parent" android:layout_height="12dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_campo"
+            android:hint="Valor de Parqueadero"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <Space android:layout_width="match_parent" android:layout_height="12dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_campo"
+            android:hint="Correo Electrónico"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <Space android:layout_width="match_parent" android:layout_height="12dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_campo"
+            android:hint="Nombre Completo"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <Space android:layout_width="match_parent" android:layout_height="12dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_campo"
+            android:hint="@string/contrasena"
+            android:inputType="textPassword"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <Space android:layout_width="match_parent" android:layout_height="12dp" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_campo"
+            android:hint="@string/confirmar_contrasena"
+            android:inputType="textPassword"
+            android:textColor="@color/white"
+            android:textColorHint="@color/gray_text"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp" />
+
+        <Space android:layout_width="match_parent" android:layout_height="16dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/btnConductor"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_tipo_normal"
+                android:text="@string/conductor"
+                android:textAllCaps="false"
+                android:textColor="@color/white" />
+
+            <Space
+                android:layout_width="10dp"
+                android:layout_height="match_parent" />
+
+            <Button
+                android:id="@+id/btnAdministrador"
+                android:layout_width="0dp"
+                android:layout_height="52dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_tipo_seleccionado"
+                android:text="@string/administrador"
+                android:textAllCaps="false"
+                android:textColor="@color/white" />
+        </LinearLayout>
+
+        <Space android:layout_width="match_parent" android:layout_height="16dp" />
+
+        <Button
+            android:id="@+id/btnRegistrarse"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:background="@drawable/bg_boton"
+            android:text="@string/registrate"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textStyle="bold" />
+
+        <Space android:layout_width="match_parent" android:layout_height="34dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ya_tienes_cuenta"
+            android:textColor="@color/white"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/txtIrLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/iniciar_sesion"
+            android:textColor="@color/white"
+            android:textStyle="bold"
+            android:layout_marginTop="10dp" />
+
+    </LinearLayout>
+</ScrollView>
