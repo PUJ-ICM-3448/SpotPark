@@ -1,31 +1,30 @@
 package com.example.spotpark
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
 import android.location.Geocoder
+import android.location.Location
 import android.os.Bundle
+import android.provider.MediaStore
 import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.Toast
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
+import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import com.google.android.gms.location.FusedLocationProviderClient
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
-import com.google.android.gms.location.LocationServices
-import com.google.android.gms.location.Priority
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.OnMapReadyCallback
-import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.location.*
+import com.google.android.gms.maps.*
+import com.google.android.gms.maps.model.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.json.JSONObject
 import java.net.URL
@@ -40,7 +39,27 @@ class MapaActivity : AppCompatActivity(), OnMapReadyCallback {
     private var ubicacionActual: LatLng? = null
     private var mostrandoRuta = false
     private val CODIGO_PERMISO = 1001
-    private val API_KEY = "AIzaSyCThZOLA5GrE4OHNvRTsZuLUBCBXpVnOn4"
+    private val API_KEY = "TU_API_KEY"
+
+    private lateinit var sensorManager: SensorManager
+    private var acelerometro: Sensor? = null
+    private var enMovimiento = false
+    private var proximitySensor: Sensor? = null
+
+    private var destinoGlobal: LatLng? = null
+
+    // Manejo de rutas y marcadores activos
+    private val rutasActivas = mutableListOf<Polyline>()
+    private val marcadoresDestino = mutableListOf<Marker>()
+
+    // Cola de rutas
+    private data class DestinoPendiente(val titulo: String, val destino: LatLng)
+    private val colaDestinos = mutableListOf<DestinoPendiente>()
+    private var yaLlegoAlActual = false
+
+    // 🔥 HARDWARE
+    private val PICK_IMAGE = 200
+    private val TAKE_PHOTO = 201
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,20 +67,22 @@ class MapaActivity : AppCompatActivity(), OnMapReadyCallback {
 
         clienteUbicacion = LocationServices.getFusedLocationProviderClient(this)
 
+        sensorManager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        acelerometro = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        proximitySensor = sensorManager.getDefaultSensor(Sensor.TYPE_PROXIMITY)
+
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.mapFragment) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
         val bottomSheet = findViewById<android.widget.LinearLayout>(R.id.bottomSheet)
         bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
-        bottomSheetBehavior.peekHeight = 120
-        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
 
         val etBuscarDireccion = findViewById<EditText>(R.id.etBuscarDireccion)
         etBuscarDireccion.setOnEditorActionListener { _, actionId, event ->
             if (actionId == EditorInfo.IME_ACTION_SEARCH ||
                 event?.keyCode == KeyEvent.KEYCODE_ENTER) {
-                buscarYTrazarRuta(etBuscarDireccion.text.toString())
+                manejarNuevaRuta(etBuscarDireccion.text.toString(), null)
                 true
             } else false
         }
@@ -71,119 +92,174 @@ class MapaActivity : AppCompatActivity(), OnMapReadyCallback {
         val btnParqueadero2 = findViewById<Button>(R.id.btnParqueadero2)
         val btnBusquedaVoz = findViewById<Button>(R.id.btnBusquedaVoz)
         val btnNotificaciones = findViewById<Button>(R.id.btnNotificaciones)
+        val btnHardware = findViewById<Button>(R.id.btnHardware)
+
+        btnHardware.setOnClickListener {
+            mostrarOpcionesHardware()
+        }
 
         btnUbicacion.setOnClickListener {
             mostrandoRuta = false
             pedirPermisoYUbicar()
         }
+
         btnNotificaciones.setOnClickListener {
             startActivity(Intent(this, NotificacionesActivity::class.java))
         }
+
         btnParqueadero1.setOnClickListener {
-            val destino = LatLng(4.6275, -74.0650)
-            trazarRuta(destino)
+            manejarNuevaRuta("Parqueadero Javeriana", LatLng(4.6275, -74.0650))
         }
+
         btnParqueadero2.setOnClickListener {
-            val destino = LatLng(4.6310, -74.0665)
-            trazarRuta(destino)
+            manejarNuevaRuta("Parqueadero Marly", LatLng(4.6310, -74.0665))
         }
+
         btnBusquedaVoz.setOnClickListener {
             startActivity(Intent(this, DetalleParqueaderoActivity::class.java))
         }
     }
+
+    // ================= HARDWARE =================
+
+    private fun mostrarOpcionesHardware() {
+        val opciones = arrayOf("Tomar foto", "Elegir de galería")
+
+        AlertDialog.Builder(this)
+            .setTitle("Selecciona opción")
+            .setItems(opciones) { _, which ->
+                if (which == 0) abrirCamara()
+                else abrirGaleria()
+            }
+            .show()
+    }
+
+    private fun abrirCamara() {
+        val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivityForResult(intent, TAKE_PHOTO)
+    }
+
+    private fun abrirGaleria() {
+        val intent = Intent(Intent.ACTION_PICK)
+        intent.type = "image/*"
+        startActivityForResult(intent, PICK_IMAGE)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == RESULT_OK) {
+            if (requestCode == PICK_IMAGE) {
+                Toast.makeText(this, "📁 Imagen seleccionada", Toast.LENGTH_SHORT).show()
+            }
+            if (requestCode == TAKE_PHOTO) {
+                val bitmap = data?.extras?.get("data") as Bitmap
+                guardarBitmap(bitmap)
+                Toast.makeText(this, "📷 Foto tomada", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun guardarBitmap(bitmap: Bitmap) {
+        MediaStore.Images.Media.insertImage(
+            contentResolver,
+            bitmap,
+            "SpotPark",
+            null
+        )
+    }
+
+    // ================= SENSORES =================
+
+    private val sensorListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent) {
+            val magnitud = Math.sqrt(
+                (event.values[0]*event.values[0] +
+                        event.values[1]*event.values[1] +
+                        event.values[2]*event.values[2]).toDouble()
+            )
+            enMovimiento = magnitud > 13
+            if (!enMovimiento) verificarLlegada()
+        }
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    }
+
+    private val proximityListener = object : SensorEventListener {
+        override fun onSensorChanged(event: SensorEvent) {
+            if (proximitySensor != null && event.values[0] < proximitySensor!!.maximumRange) {
+                Toast.makeText(this@MapaActivity, "Sensor proximidad activado", Toast.LENGTH_SHORT).show()
+            }
+        }
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+    }
+
+    override fun onResume() {
+        super.onResume()
+        acelerometro?.also { sensorManager.registerListener(sensorListener, it, SensorManager.SENSOR_DELAY_NORMAL) }
+        proximitySensor?.also { sensorManager.registerListener(proximityListener, it, SensorManager.SENSOR_DELAY_NORMAL) }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        sensorManager.unregisterListener(sensorListener)
+        sensorManager.unregisterListener(proximityListener)
+    }
+
+    // ================= MAPA =================
 
     override fun onMapReady(googleMap: GoogleMap) {
         mapa = googleMap
         mapa.uiSettings.isZoomControlsEnabled = true
         mapa.uiSettings.isMyLocationButtonEnabled = true
 
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.mapFragment) as SupportMapFragment
-        mapFragment.view?.setPadding(0, 0, 0, 120)
-
         val javeriana = LatLng(4.6280, -74.0641)
         mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(javeriana, 15f))
 
-        val parqueaderoJaveriana = LatLng(4.6275, -74.0650)
-        val parqueaderoMarly = LatLng(4.6310, -74.0665)
-        mapa.addMarker(MarkerOptions().position(parqueaderoJaveriana).title("Parqueadero Javeriana"))
-        mapa.addMarker(MarkerOptions().position(parqueaderoMarly).title("Parqueadero Marly"))
-
-        mapa.setOnMapLongClickListener { punto ->
-            mapa.addMarker(MarkerOptions().position(punto).title("Punto seleccionado"))
-            trazarRuta(punto)
+        mapa.setOnMapLongClickListener {
+            manejarNuevaRuta("Punto seleccionado", it)
         }
 
         pedirPermisoYUbicar()
     }
 
-    private fun buscarYTrazarRuta(direccion: String) {
-        if (direccion.isEmpty()) return
+    private fun manejarNuevaRuta(texto: String, destino: LatLng?) {
+        if (destino != null) {
+            destinoGlobal = destino
+            trazarRuta(destino)
+        } else {
+            buscarDireccionYTrazar(texto)
+        }
+    }
+
+    private fun buscarDireccionYTrazar(direccion: String) {
         Thread {
-            try {
-                val geocoder = Geocoder(this, Locale.getDefault())
-                val resultados = geocoder.getFromLocationName(direccion, 1)
-                if (!resultados.isNullOrEmpty()) {
-                    val lugar = resultados[0]
-                    val destino = LatLng(lugar.latitude, lugar.longitude)
-                    runOnUiThread {
-                        mapa.addMarker(MarkerOptions().position(destino).title(direccion))
-                        bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-                        trazarRuta(destino)
-                    }
-                } else {
-                    runOnUiThread {
-                        Toast.makeText(this, "Dirección no encontrada", Toast.LENGTH_SHORT).show()
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Error al buscar dirección", Toast.LENGTH_SHORT).show()
-                }
+            val geocoder = Geocoder(this, Locale.getDefault())
+            val resultados = geocoder.getFromLocationName(direccion, 1)
+            if (!resultados.isNullOrEmpty()) {
+                val destino = LatLng(resultados[0].latitude, resultados[0].longitude)
+                runOnUiThread { trazarRuta(destino) }
             }
         }.start()
     }
 
     private fun trazarRuta(destino: LatLng) {
         val origen = ubicacionActual ?: return
-        mostrandoRuta = true
         Thread {
-            try {
-                val url = "https://maps.googleapis.com/maps/api/directions/json?" +
-                        "origin=${origen.latitude},${origen.longitude}" +
-                        "&destination=${destino.latitude},${destino.longitude}" +
-                        "&mode=driving" +
-                        "&key=$API_KEY"
+            val url = "https://maps.googleapis.com/maps/api/directions/json?" +
+                    "origin=${origen.latitude},${origen.longitude}" +
+                    "&destination=${destino.latitude},${destino.longitude}" +
+                    "&mode=driving&key=$API_KEY"
 
-                val respuesta = URL(url).readText()
-                val json = JSONObject(respuesta)
-                val rutas = json.getJSONArray("routes")
+            val json = JSONObject(URL(url).readText())
+            val puntos = json.getJSONArray("routes")
+                .getJSONObject(0)
+                .getJSONObject("overview_polyline")
+                .getString("points")
 
-                if (rutas.length() > 0) {
-                    val puntos = rutas.getJSONObject(0)
-                        .getJSONObject("overview_polyline")
-                        .getString("points")
+            val ruta = decodificarPolyline(puntos)
 
-                    val listaPuntosRuta = decodificarPolyline(puntos)
-
-                    runOnUiThread {
-                        mapa.addPolyline(
-                            PolylineOptions()
-                                .addAll(listaPuntosRuta)
-                                .color(android.graphics.Color.BLUE)
-                                .width(10f)
-                        )
-                        val limites = com.google.android.gms.maps.model.LatLngBounds.Builder()
-                        listaPuntosRuta.forEach { limites.include(it) }
-                        mapa.animateCamera(
-                            CameraUpdateFactory.newLatLngBounds(limites.build(), 100)
-                        )
-                    }
-                }
-            } catch (e: Exception) {
-                runOnUiThread {
-                    Toast.makeText(this, "Error al trazar ruta", Toast.LENGTH_SHORT).show()
-                }
+            runOnUiThread {
+                mapa.addPolyline(PolylineOptions().addAll(ruta).width(10f))
             }
         }.start()
     }
@@ -220,66 +296,40 @@ class MapaActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun pedirPermisoYUbicar() {
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) == PackageManager.PERMISSION_GRANTED
-        ) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED) {
             activarUbicacion()
         } else {
-            ActivityCompat.requestPermissions(
-                this,
+            ActivityCompat.requestPermissions(this,
                 arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
-                CODIGO_PERMISO
-            )
+                CODIGO_PERMISO)
         }
     }
 
     private fun activarUbicacion() {
-        if (ContextCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION
-            ) != PackageManager.PERMISSION_GRANTED
-        ) return
-
-        mapa.isMyLocationEnabled = true
-
         val solicitud = LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 3000).build()
-        val callback = object : LocationCallback() {
-            override fun onLocationResult(resultado: LocationResult) {
-                resultado.lastLocation?.let { ubicacion ->
-                    val punto = LatLng(ubicacion.latitude, ubicacion.longitude)
-                    ubicacionActual = punto
-                    listaPuntos.add(punto)
-
-                    if (!mostrandoRuta) {
-                        mapa.moveCamera(CameraUpdateFactory.newLatLngZoom(punto, 15f))
-                    }
-
-                    if (listaPuntos.size > 1 && !mostrandoRuta) {
-                        mapa.addPolyline(
-                            PolylineOptions()
-                                .addAll(listaPuntos)
-                                .color(android.graphics.Color.GREEN)
-                                .width(8f)
-                        )
+        clienteUbicacion.requestLocationUpdates(solicitud,
+            object : LocationCallback() {
+                override fun onLocationResult(result: LocationResult) {
+                    result.lastLocation?.let {
+                        ubicacionActual = LatLng(it.latitude, it.longitude)
                     }
                 }
-            }
-        }
-        clienteUbicacion.requestLocationUpdates(solicitud, callback, mainLooper)
+            }, mainLooper)
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<out String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == CODIGO_PERMISO && grantResults.isNotEmpty() &&
-            grantResults[0] == PackageManager.PERMISSION_GRANTED
-        ) {
-            activarUbicacion()
-        } else {
-            Toast.makeText(this, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
+    private fun verificarLlegada() {
+        if (ubicacionActual == null || destinoGlobal == null) return
+        val resultados = FloatArray(1)
+        Location.distanceBetween(
+            ubicacionActual!!.latitude,
+            ubicacionActual!!.longitude,
+            destinoGlobal!!.latitude,
+            destinoGlobal!!.longitude,
+            resultados
+        )
+        if (resultados[0] < 30) {
+            Toast.makeText(this, "🚗 Has llegado al destino", Toast.LENGTH_LONG).show()
         }
     }
 }

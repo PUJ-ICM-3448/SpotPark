@@ -139,6 +139,19 @@
             android:textColor="@color/white"
             android:textStyle="bold" />
 
+        <!-- 🔥 NUEVO BOTÓN HARDWARE -->
+        <Space android:layout_width="match_parent" android:layout_height="12dp" />
+
+        <Button
+            android:id="@+id/btnHardware"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:background="@drawable/bg_boton"
+            android:text="Subir evidencia"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textStyle="bold" />
+
     </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
