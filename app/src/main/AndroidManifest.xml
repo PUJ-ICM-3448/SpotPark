@@ -24,7 +24,7 @@
         <activity android:name=".NavegacionActivity" />
         <activity android:name=".DetalleParqueaderoActivity" />
         <activity android:name=".MapaActivity" />
-        <activity android:name=".RegistroActivity" />
+        <activity android:name=".ui.theme.RegistroActivity" />
         <activity android:name=".NotificacionesActivity" />
         <activity android:name=".RegistroAdminActivity" />
         <activity

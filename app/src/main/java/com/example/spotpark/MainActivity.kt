@@ -2,6 +2,7 @@ package com.example.spotpark
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
@@ -25,18 +26,25 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.spotpark.ui.theme.RegistroActivity
+import com.google.firebase.Firebase
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.auth
 
 class MainActivity : ComponentActivity() {
+    val auth = Firebase.auth
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             LoginScreen(
+                auth = auth,
                 onLogin = {
                     startActivity(Intent(this, MapaActivity::class.java))
                 },
@@ -53,12 +61,14 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun LoginScreen(
+    auth: FirebaseAuth,
     onLogin: () -> Unit,
     onVoiceLogin: () -> Unit,
     onGoRegister: () -> Unit
 ) {
     var usuario by remember { mutableStateOf("") }
     var contrasena by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
     val darkGreen = Color(0xFF003B1F)
     val midGreen = Color(0xFF1E523C)
@@ -95,7 +105,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = usuario,
             onValueChange = { usuario = it },
-            label = { Text("Usuario o Correo Electrónico", color = grayHint) },
+            label = { Text("Correo Electrónico", color = grayHint) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = TextFieldDefaults.colors(
@@ -135,7 +145,21 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(18.dp))
 
         Button(
-            onClick = onLogin,
+            onClick = {
+                if (usuario.isNotEmpty() && contrasena.isNotEmpty()) {
+                auth.signInWithEmailAndPassword(usuario, contrasena)
+                    .addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            // ¡Éxito! Navegamos al Home
+                            onLogin()
+                        } else {
+                            // Error (ej: contraseña mal o usuario no existe)
+                            Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+            } else {
+                Toast.makeText(context, "Por favor llena todos los campos", Toast.LENGTH_SHORT).show()
+            }},
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),

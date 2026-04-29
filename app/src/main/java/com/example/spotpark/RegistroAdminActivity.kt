@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.widget.Button
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import com.example.spotpark.ui.theme.RegistroActivity
 
 class RegistroAdminActivity : AppCompatActivity() {
 
@@ -18,15 +19,10 @@ class RegistroAdminActivity : AppCompatActivity() {
         val txtIrLogin = findViewById<TextView>(R.id.txtIrLogin)
         val btnVolver = findViewById<Button>(R.id.btnVolver)
 
-        btnAdministrador.setOnClickListener {
-            btnAdministrador.setBackgroundResource(R.drawable.bg_tipo_seleccionado)
-            btnConductor.setBackgroundResource(R.drawable.bg_tipo_normal)
-        }
+        btnAdministrador.setBackgroundResource(R.drawable.bg_tipo_seleccionado)
+        btnConductor.setBackgroundResource(R.drawable.bg_tipo_normal)
 
         btnConductor.setOnClickListener {
-            btnConductor.setBackgroundResource(R.drawable.bg_tipo_seleccionado)
-            btnAdministrador.setBackgroundResource(R.drawable.bg_tipo_normal)
-            startActivity(Intent(this, RegistroActivity::class.java))
             finish()
         }
 
